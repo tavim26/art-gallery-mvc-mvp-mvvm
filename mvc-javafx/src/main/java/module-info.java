@@ -5,9 +5,6 @@ module org.example.assignmentmvc {
     requires org.controlsfx.controls;
     requires java.sql;
 
-    opens org.example.assignmentmvc to javafx.fxml;
-    exports org.example.assignmentmvc;
-
     exports View;
     opens View to javafx.fxml;
 }

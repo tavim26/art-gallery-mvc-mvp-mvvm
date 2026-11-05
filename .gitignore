@@ -1,49 +1,48 @@
-# --- Visual Studio ---
-.vs/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-
-# --- Build ---
+# --- Build output ---
+target/
 bin/
 obj/
+out/
+build/
 
-# --- Nu include fișierele SQLite dacă nu sunt esențiale ---
+# --- Java ---
+*.class
+*.war
+*.log
+*.jar
+!**/.mvn/wrapper/maven-wrapper.jar
+
+# --- Local databases (created at runtime) ---
 *.sqlite
 *.db
 
-# --- Java / JavaFX ---
-*.class
-*.jar
-*.war
-*.log
-*.iml
-target/
-out/
-
-# --- Eclipse / IntelliJ / NetBeans ---
-.idea/
-.project
-.classpath
-.settings/
-.nb-gradle/
-
-# --- Sisteme ---
-Thumbs.db
-ehthumbs.db
-.DS_Store
-*.swp
-
-# --- Node/React (dacă ai ceva extra) ---
-node_modules/
-dist/
-
-# --- CSV și fișiere temporare ---
+# --- Generated exports ---
 *.csv
 *.tmp
 *.bak
 
-# --- Exclude orice folder specific IDE care nu contează pentru GitHub ---
-*.vscode/
-*.ncb
+# --- IDEs ---
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.vs/
+*.user
+*.suo
+.project
+.classpath
+.settings/
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
+nbproject/private/
+nbbuild/
+nbdist/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+*.swp
