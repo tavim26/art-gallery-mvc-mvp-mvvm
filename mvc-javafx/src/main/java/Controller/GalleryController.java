@@ -90,7 +90,11 @@ public class GalleryController
         view.getArtistTable().getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
             if (selected != null) {
                 view.getNameTextField().setText(selected[0]);
-                view.getBirthdayDatePicker().setValue(java.time.LocalDate.parse(selected[1]));
+
+                String birthday = selected[1];
+                view.getBirthdayDatePicker().setValue(
+                    birthday == null || birthday.isBlank() ? null : java.time.LocalDate.parse(birthday));
+
                 view.getBirthplaceTextField().setText(selected[2]);
                 view.getNationalityTextField().setText(selected[3]);
 
@@ -227,7 +231,7 @@ public class GalleryController
                     Integer.parseInt(view.getYearTextField().getText())
             );
         } catch (NumberFormatException ex) {
-            ex.printStackTrace();
+            showInputError("Price must be a number and Year must be an integer.");
         }
     }
 
@@ -246,7 +250,7 @@ public class GalleryController
                     Integer.parseInt(view.getYearTextField().getText())
             );
         } catch (NumberFormatException ex) {
-            ex.printStackTrace();
+            showInputError("Price must be a number and Year must be an integer.");
         }
     }
 
@@ -315,6 +319,14 @@ public class GalleryController
         var typeData = viewModel.getArtworkCountsByType();
         var artistData = viewModel.getArtworkCountsByArtist();
         view.displayStatistics(typeData, artistData);
+    }
+
+
+        private void showInputError(String message) {
+        javafx.scene.control.Alert alert =
+                new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR, message);
+        alert.setHeaderText(null);
+        alert.showAndWait();
     }
 
 

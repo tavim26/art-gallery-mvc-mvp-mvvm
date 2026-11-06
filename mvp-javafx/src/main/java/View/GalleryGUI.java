@@ -80,7 +80,7 @@ public class GalleryGUI implements IGalleryGUI, Initializable {
 
         artistTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
-                String[] data = newSelection.split(",");
+                String[] data = newSelection.split(",", -1);
                 try {
                     presenter.populateArtistFields(data[0]);
                 } catch (SQLException e) {
@@ -92,7 +92,7 @@ public class GalleryGUI implements IGalleryGUI, Initializable {
         });
         artworkTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
-                String[] data = newSelection.split(",");
+                String[] data = newSelection.split(",", -1);
                 try {
                     presenter.populateArtworkFields(data[0]);
                     presenter.displayArtworkImages(data[0]);
@@ -141,13 +141,13 @@ public class GalleryGUI implements IGalleryGUI, Initializable {
         TableColumn<String, String> nationalityColumn = (TableColumn<String, String>) artistTable.getColumns().get(3);
         TableColumn<String, String> artworksColumn = (TableColumn<String, String>) artistTable.getColumns().get(4);
 
-        nameColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",")[0]));
-        birthdateColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",")[1]));
-        birthplaceColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",")[2]));
-        nationalityColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",")[3]));
+        nameColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",", -1)[0]));
+        birthdateColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",", -1)[1]));
+        birthplaceColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",", -1)[2]));
+        nationalityColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",", -1)[3]));
         artworksColumn.setCellValueFactory(cellData -> {
             try {
-                return new SimpleStringProperty(String.join(", ", presenter.getArtworksByArtist(cellData.getValue().split(",")[0])));
+                return new SimpleStringProperty(String.join(", ", presenter.getArtworksByArtist(cellData.getValue().split(",", -1)[0])));
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -161,11 +161,11 @@ public class GalleryGUI implements IGalleryGUI, Initializable {
         TableColumn<String, String> priceColumn = (TableColumn<String, String>) artworkTable.getColumns().get(3);
         TableColumn<String, String> creationYearColumn = (TableColumn<String, String>) artworkTable.getColumns().get(4);
 
-        titleColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",")[0]));
-        artistNameColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",")[1]));
-        typeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",")[2]));
-        priceColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",")[3]));
-        creationYearColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",")[4]));
+        titleColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",", -1)[0]));
+        artistNameColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",", -1)[1]));
+        typeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",", -1)[2]));
+        priceColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",", -1)[3]));
+        creationYearColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().split(",", -1)[4]));
     }
 
 
@@ -214,21 +214,21 @@ public class GalleryGUI implements IGalleryGUI, Initializable {
     @FXML
     private void clickEditArtist() {
         String selected = artistTable.getSelectionModel().getSelectedItem();
-        String oldName = selected != null ? selected.split(",")[0] : "";
+        String oldName = selected != null ? selected.split(",", -1)[0] : "";
         presenter.onEditArtistClicked(oldName);
     }
 
     @FXML
     private void clickEditArtwork() {
         String selected = artworkTable.getSelectionModel().getSelectedItem();
-        String oldTitle = selected != null ? selected.split(",")[0] : "";
+        String oldTitle = selected != null ? selected.split(",", -1)[0] : "";
         presenter.onEditArtworkClicked(oldTitle);
     }
 
     @FXML
     private void clickDeleteArtist() {
         String selectedArtist = artistTable.getSelectionModel().getSelectedItem();
-        String name = selectedArtist != null ? selectedArtist.split(",")[0] : "";
+        String name = selectedArtist != null ? selectedArtist.split(",", -1)[0] : "";
         presenter.deleteArtist(name);
     }
 
@@ -237,19 +237,21 @@ public class GalleryGUI implements IGalleryGUI, Initializable {
     @FXML
     private void clickDeleteArtwork() {
         String selectedArtwork = artworkTable.getSelectionModel().getSelectedItem();
-        String title = selectedArtwork != null ? selectedArtwork.split(",")[0] : "";
+        String title = selectedArtwork != null ? selectedArtwork.split(",", -1)[0] : "";
         presenter.deleteArtwork(title);
     }
 
     @FXML
     private void clickAddImage() {
         String selectedArtwork = artworkTable.getSelectionModel().getSelectedItem();
-        String title = selectedArtwork != null ? selectedArtwork.split(",")[0] : "";
+        String title = selectedArtwork != null ? selectedArtwork.split(",", -1)[0] : "";
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
         File selectedFile = fileChooser.showOpenDialog(addImageButton.getScene().getWindow());
-        String imagePath = selectedFile != null ? selectedFile.toURI().toString() : "";
-        presenter.addArtworkImage(title, imagePath);
+        if (selectedFile == null) {
+            return;
+        }
+        presenter.addArtworkImage(title, selectedFile.toURI().toString());
     }
 
     @FXML
@@ -257,6 +259,9 @@ public class GalleryGUI implements IGalleryGUI, Initializable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
         File file = fileChooser.showSaveDialog(saveToCsvButton.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
         presenter.exportArtworksToCSV(file.getAbsolutePath());
     }
 
@@ -265,6 +270,9 @@ public class GalleryGUI implements IGalleryGUI, Initializable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
         File file = fileChooser.showSaveDialog(saveToDocButton.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
         presenter.exportArtworksToText(file.getAbsolutePath());
     }
 
