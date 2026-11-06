@@ -1,5 +1,6 @@
 package View;
 
+import Model.Repository.DatabaseInitializer;
 import Model.ViewModel.GalleryViewModel;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -14,6 +15,8 @@ public class Main extends Application
     @Override
     public void start(Stage primaryStage) throws Exception
     {
+        DatabaseInitializer.init();
+
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/scenebuilder/main_view.fxml"));
         Parent root = loader.load();
 
