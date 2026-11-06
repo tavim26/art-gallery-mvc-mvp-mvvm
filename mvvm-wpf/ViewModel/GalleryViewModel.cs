@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows.Input;
@@ -20,6 +21,11 @@ namespace AssignmentMVVM.ViewModel
 
         private Artist crtArtist;
         private Artwork crtArtwork;
+
+        // Name/title as stored in the database at selection time.
+        // Needed because the text boxes edit the selected object in place.
+        private string artistOriginalName;
+        private string artworkOriginalTitle;
 
         private List<Artist> artistsList;
         private List<Artwork> artworksList;
@@ -51,7 +57,6 @@ namespace AssignmentMVVM.ViewModel
         private ICommand clearArtistCommand;
         private ICommand clearArtworkCommand;
 
-
         private ICommand addImageCommand;
         private ICommand saveToCsvCommand;
         private ICommand saveToDocCommand;
@@ -65,8 +70,18 @@ namespace AssignmentMVVM.ViewModel
             this.artworkRepo = new ArtworkRepo();
             this.artworkImageRepo = new ArtworkImageRepo();
 
-            this.artistsList = artistRepo.GetAllArtists();
-            this.artworksList = artworkRepo.GetAllArtworks();
+            this.artistsList = new List<Artist>();
+            this.artworksList = new List<Artwork>();
+
+            try
+            {
+                this.artistsList = artistRepo.GetAllArtists();
+                this.artworksList = artworkRepo.GetAllArtworks();
+            }
+            catch (Exception ex)
+            {
+                Message = "Could not load data from the database: " + ex.Message;
+            }
 
             ArtistNames = ArtistsList.Select(a => a.Name).ToList();
 
@@ -84,10 +99,8 @@ namespace AssignmentMVVM.ViewModel
             this.filterByTypeCommand = new GalleryCommand(FilterArtworkByType);
             this.filterByPriceCommand = new GalleryCommand(FilterArtworkByPrice);
 
-            clearArtistCommand = new GalleryCommand(ClearArtist);
-            clearArtworkCommand = new GalleryCommand(ClearArtwork);
-
-
+            this.clearArtistCommand = new GalleryCommand(ClearArtist);
+            this.clearArtworkCommand = new GalleryCommand(ClearArtwork);
 
             this.addImageCommand = new GalleryCommand(AddImage);
             this.saveToCsvCommand = new GalleryCommand(SaveToCsv);
@@ -96,15 +109,11 @@ namespace AssignmentMVVM.ViewModel
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-
-
-        
         public List<string> ArtistNames
         {
             get => artistNames;
@@ -115,13 +124,10 @@ namespace AssignmentMVVM.ViewModel
             }
         }
 
-
-
         public List<string> ArtworkTypes { get; } = new List<string>
         {
             "Painting", "Sculpture", "Photography"
         };
-
 
         public string SelectedArtistName
         {
@@ -135,13 +141,11 @@ namespace AssignmentMVVM.ViewModel
             set { selectedArtworkType = value; OnPropertyChanged(nameof(SelectedArtworkType)); }
         }
 
-        
         public string PriceFilter
         {
             get => priceFilter;
             set { priceFilter = value; OnPropertyChanged(nameof(PriceFilter)); }
         }
-
 
         public List<Artist> ArtistsList
         {
@@ -164,36 +168,32 @@ namespace AssignmentMVVM.ViewModel
         public string SearchedArtist
         {
             get => searchedArtist;
-            set
-            {
-                searchedArtist = value;
-                
-            }
+            set { searchedArtist = value; }
         }
-
 
         public string SearchedArtwork
         {
             get => searchedArtwork;
-            set => searchedArtwork = value;
+            set { searchedArtwork = value; }
         }
-
 
         public Artist CrtArtist
         {
             get => crtArtist;
             set
             {
-                crtArtist = value;
+                // The DataGrid sets null when its list is reloaded; keep a blank
+                // artist so the form fields stay usable.
+                crtArtist = value ?? new Artist();
+                artistOriginalName = crtArtist.Name;
                 OnPropertyChanged(nameof(CrtArtist));
                 LoadArtistImage();
             }
         }
 
-
         private void LoadArtistImage()
         {
-            if (!string.IsNullOrWhiteSpace(crtArtist?.Photo))
+            if (!string.IsNullOrWhiteSpace(crtArtist.Photo))
             {
                 string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", crtArtist.Photo);
 
@@ -214,26 +214,30 @@ namespace AssignmentMVVM.ViewModel
             Message = "No image assigned.";
         }
 
-
-
-
-
-
         public Artwork CrtArtwork
         {
             get => crtArtwork;
             set
             {
-                crtArtwork = value;
+                crtArtwork = value ?? new Artwork();
+                artworkOriginalTitle = crtArtwork.Title;
 
-                if (!string.IsNullOrWhiteSpace(crtArtwork?.Title))
+                if (!string.IsNullOrWhiteSpace(crtArtwork.Title))
                 {
-                    crtArtwork.Images = artworkImageRepo.GetImagesByArtwork(crtArtwork.Title);
+                    try
+                    {
+                        crtArtwork.Images = artworkImageRepo.GetImagesByArtwork(crtArtwork.Title);
+                    }
+                    catch (Exception ex)
+                    {
+                        crtArtwork.Images = new List<ArtworkImage>();
+                        Message = "Error loading artwork images: " + ex.Message;
+                    }
                     LoadArtworkImages();
                 }
                 else
                 {
-                    crtArtwork.Images = new List<ArtworkImage>(); 
+                    crtArtwork.Images = new List<ArtworkImage>();
                     ArtworkImage1 = null;
                     ArtworkImage2 = null;
                 }
@@ -242,20 +246,12 @@ namespace AssignmentMVVM.ViewModel
             }
         }
 
-
-
-
-
-
-
         private ImageSource artistImageSource;
         public ImageSource ArtistImageSource
         {
             get => artistImageSource;
             set { artistImageSource = value; OnPropertyChanged(nameof(ArtistImageSource)); }
         }
-
-
 
         private ImageSource artworkImage1;
         public ImageSource ArtworkImage1
@@ -271,13 +267,12 @@ namespace AssignmentMVVM.ViewModel
             set { artworkImage2 = value; OnPropertyChanged(nameof(ArtworkImage2)); }
         }
 
-
         private void LoadArtworkImages()
         {
             ArtworkImage1 = null;
             ArtworkImage2 = null;
 
-            if (crtArtwork?.Images == null || crtArtwork.Images.Count == 0)
+            if (crtArtwork.Images == null || crtArtwork.Images.Count == 0)
             {
                 Message = "No images for this artwork.";
                 return;
@@ -304,9 +299,6 @@ namespace AssignmentMVVM.ViewModel
             }
         }
 
-
-
-
         public ICommand AddArtistCommand => addArtistCommand;
         public ICommand UpdateArtistCommand => updateArtistCommand;
         public ICommand DeleteArtistCommand => deleteArtistCommand;
@@ -321,7 +313,6 @@ namespace AssignmentMVVM.ViewModel
         public ICommand FilterByTypeCommand => filterByTypeCommand;
         public ICommand FilterByPriceCommand => filterByPriceCommand;
 
-
         public ICommand ClearArtistCommand => clearArtistCommand;
         public ICommand ClearArtworkCommand => clearArtworkCommand;
 
@@ -329,10 +320,33 @@ namespace AssignmentMVVM.ViewModel
         public ICommand SaveToCsvCommand => saveToCsvCommand;
         public ICommand SaveToDocCommand => saveToDocCommand;
 
+        private void RefreshArtists()
+        {
+            ArtistsList = artistRepo.GetAllArtists();
+            ArtistNames = ArtistsList.Select(a => a.Name).ToList();
+        }
+
+        private static void CopyImage(string source, string destination)
+        {
+            if (string.Equals(Path.GetFullPath(source), Path.GetFullPath(destination), StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+            File.Copy(source, destination, overwrite: true);
+        }
+
+        // ===== ARTIST =====
+
         public void AddArtist()
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(crtArtist.Name))
+                {
+                    Message = "Artist name is required.";
+                    return;
+                }
+
                 OpenFileDialog openFileDialog = new OpenFileDialog();
                 openFileDialog.Filter = "Image files (*.jpg, *.jpeg, *.png)|*.jpg;*.jpeg;*.png";
 
@@ -340,21 +354,16 @@ namespace AssignmentMVVM.ViewModel
                 {
                     string selectedFile = openFileDialog.FileName;
 
-                    
                     string imagesFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images");
-                    if (!Directory.Exists(imagesFolder))
-                        Directory.CreateDirectory(imagesFolder);
+                    Directory.CreateDirectory(imagesFolder);
 
-                    
                     string fileName = Path.GetFileName(selectedFile);
-                    string destinationPath = Path.Combine(imagesFolder, fileName);
-                    File.Copy(selectedFile, destinationPath, overwrite: true);
+                    CopyImage(selectedFile, Path.Combine(imagesFolder, fileName));
 
-                    
                     crtArtist.Photo = fileName;
 
                     artistRepo.AddArtist(crtArtist);
-                    ArtistsList = artistRepo.GetAllArtists();
+                    RefreshArtists();
                     Message = "Artist added successfully!";
                 }
                 else
@@ -368,19 +377,23 @@ namespace AssignmentMVVM.ViewModel
             }
         }
 
-
-
-
-
         public void UpdateArtist()
         {
             try
             {
-                artistRepo.UpdateArtist(crtArtist.Name, crtArtist);
-                ArtistsList = artistRepo.GetAllArtists();
+                if (string.IsNullOrWhiteSpace(artistOriginalName))
+                {
+                    Message = "Select an artist from the list first.";
+                    return;
+                }
+                if (string.IsNullOrWhiteSpace(crtArtist.Name))
+                {
+                    Message = "Artist name is required.";
+                    return;
+                }
 
-                ArtistNames = ArtistsList.Select(a => a.Name).ToList();
-
+                artistRepo.UpdateArtist(artistOriginalName, crtArtist);
+                RefreshArtists();
                 Message = "Artist updated successfully!";
             }
             catch (Exception ex)
@@ -393,11 +406,15 @@ namespace AssignmentMVVM.ViewModel
         {
             try
             {
-                artistRepo.DeleteArtist(crtArtist.Name);
-                ArtistsList = artistRepo.GetAllArtists();
+                if (string.IsNullOrWhiteSpace(artistOriginalName))
+                {
+                    Message = "Select an artist from the list first.";
+                    return;
+                }
 
-                ArtistNames = ArtistsList.Select(a => a.Name).ToList();
-
+                artistRepo.DeleteArtist(artistOriginalName);
+                RefreshArtists();
+                ArtworksList = artworkRepo.GetAllArtworks();
                 Message = "Artist deleted successfully!";
             }
             catch (Exception ex)
@@ -411,7 +428,7 @@ namespace AssignmentMVVM.ViewModel
             try
             {
                 if (string.IsNullOrWhiteSpace(searchedArtist))
-                    ArtistsList = artistRepo.GetAllArtists(); 
+                    ArtistsList = artistRepo.GetAllArtists();
                 else
                     ArtistsList = artistRepo.SearchByName(searchedArtist);
 
@@ -423,11 +440,20 @@ namespace AssignmentMVVM.ViewModel
             }
         }
 
+        // ===== ARTWORK =====
 
         public void AddArtwork()
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(crtArtwork.Title) ||
+                    crtArtwork.Artist == null ||
+                    string.IsNullOrWhiteSpace(crtArtwork.Type))
+                {
+                    Message = "Title, artist and type are required.";
+                    return;
+                }
+
                 artworkRepo.AddArtwork(crtArtwork, crtArtwork.Artist.Name);
                 ArtworksList = artworkRepo.GetAllArtworks();
                 Message = "Artwork added successfully!";
@@ -442,7 +468,20 @@ namespace AssignmentMVVM.ViewModel
         {
             try
             {
-                artworkRepo.UpdateArtwork(crtArtwork.Title, crtArtwork, crtArtwork.Artist.Name);
+                if (string.IsNullOrWhiteSpace(artworkOriginalTitle))
+                {
+                    Message = "Select an artwork from the list first.";
+                    return;
+                }
+                if (string.IsNullOrWhiteSpace(crtArtwork.Title) ||
+                    crtArtwork.Artist == null ||
+                    string.IsNullOrWhiteSpace(crtArtwork.Type))
+                {
+                    Message = "Title, artist and type are required.";
+                    return;
+                }
+
+                artworkRepo.UpdateArtwork(artworkOriginalTitle, crtArtwork, crtArtwork.Artist.Name);
                 ArtworksList = artworkRepo.GetAllArtworks();
                 Message = "Artwork updated successfully!";
             }
@@ -456,7 +495,13 @@ namespace AssignmentMVVM.ViewModel
         {
             try
             {
-                artworkRepo.DeleteArtwork(crtArtwork.Title);
+                if (string.IsNullOrWhiteSpace(artworkOriginalTitle))
+                {
+                    Message = "Select an artwork from the list first.";
+                    return;
+                }
+
+                artworkRepo.DeleteArtwork(artworkOriginalTitle);
                 ArtworksList = artworkRepo.GetAllArtworks();
                 Message = "Artwork deleted successfully!";
             }
@@ -499,7 +544,6 @@ namespace AssignmentMVVM.ViewModel
             }
         }
 
-
         public void FilterArtworkByType()
         {
             try
@@ -519,7 +563,6 @@ namespace AssignmentMVVM.ViewModel
                 Message = "Error: " + ex.Message;
             }
         }
-
 
         public void FilterArtworkByPrice()
         {
@@ -541,26 +584,34 @@ namespace AssignmentMVVM.ViewModel
             }
         }
 
-
         public void AddImage()
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(artworkOriginalTitle))
+                {
+                    Message = "Select an artwork from the list first.";
+                    return;
+                }
+
                 OpenFileDialog openFileDialog = new OpenFileDialog();
                 openFileDialog.Filter = "Image files (*.jpg, *.jpeg, *.png)|*.jpg;*.jpeg;*.png";
 
                 if (openFileDialog.ShowDialog() == true)
                 {
+                    string imagesFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images");
+                    Directory.CreateDirectory(imagesFolder);
+
                     string imageName = Path.GetFileName(openFileDialog.FileName);
-                    string destPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", imageName);
+                    string destPath = Path.Combine(imagesFolder, imageName);
 
                     if (!File.Exists(destPath))
                         File.Copy(openFileDialog.FileName, destPath);
 
                     var image = new ArtworkImage(imageName, crtArtwork);
-                    artworkImageRepo.AddImage(crtArtwork.Title, image);
+                    artworkImageRepo.AddImage(artworkOriginalTitle, image);
 
-                    crtArtwork.Images = artworkImageRepo.GetImagesByArtwork(crtArtwork.Title);
+                    crtArtwork.Images = artworkImageRepo.GetImagesByArtwork(artworkOriginalTitle);
                     LoadArtworkImages();
 
                     Message = "Image added to artwork!";
@@ -576,10 +627,6 @@ namespace AssignmentMVVM.ViewModel
             }
         }
 
-
-
-
-
         public void ClearArtist()
         {
             CrtArtist = new Artist();
@@ -592,6 +639,18 @@ namespace AssignmentMVVM.ViewModel
             Message = "Artwork fields cleared.";
         }
 
+        // ===== EXPORT =====
+
+        private static string EscapeCsv(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
+
+            if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
+                return "\"" + value.Replace("\"", "\"\"") + "\"";
+
+            return value;
+        }
 
         public void SaveToCsv()
         {
@@ -611,7 +670,12 @@ namespace AssignmentMVVM.ViewModel
 
                     foreach (var artwork in ArtworksList)
                     {
-                        sb.AppendLine($"{artwork.Title},{artwork.Artist.Name},{artwork.Type},{artwork.Price},{artwork.CreationYear}");
+                        sb.AppendLine(string.Join(",",
+                            EscapeCsv(artwork.Title),
+                            EscapeCsv(artwork.Artist.Name),
+                            EscapeCsv(artwork.Type),
+                            artwork.Price.ToString(CultureInfo.InvariantCulture),
+                            artwork.CreationYear.ToString(CultureInfo.InvariantCulture)));
                     }
 
                     File.WriteAllText(saveFileDialog.FileName, sb.ToString());
@@ -623,7 +687,6 @@ namespace AssignmentMVVM.ViewModel
                 Message = "Error saving CSV: " + ex.Message;
             }
         }
-
 
         public void SaveToDoc()
         {
@@ -660,6 +723,5 @@ namespace AssignmentMVVM.ViewModel
                 Message = "Error saving TXT: " + ex.Message;
             }
         }
-
     }
 }

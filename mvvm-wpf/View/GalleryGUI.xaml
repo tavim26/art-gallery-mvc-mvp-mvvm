@@ -169,7 +169,7 @@
                 <!-- Coloana pentru Birthday -->
                 <DataGridTextColumn Header="Birthday" 
                                     Width="*" 
-                                    Binding="{Binding Path =BirthDate}" />
+                                    Binding="{Binding Path=BirthDate, StringFormat=d}" />
 
                 <!-- Coloana pentru Birthplace -->
                 <DataGridTextColumn Header="Birthplace" 

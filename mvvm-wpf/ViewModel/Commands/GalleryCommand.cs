@@ -6,7 +6,11 @@ namespace AssignmentMVVM.ViewModel.Commands
     {
         private readonly Action action;
 
-        public event EventHandler? CanExecuteChanged;
+        public event EventHandler CanExecuteChanged
+        {
+            add { CommandManager.RequerySuggested += value; }
+            remove { CommandManager.RequerySuggested -= value; }
+        }
 
         public GalleryCommand(Action action)
         {
