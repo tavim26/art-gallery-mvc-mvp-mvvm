@@ -7,8 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="750" d:DesignWidth="1300">
     <Grid x:Name="GalleryGrid" Background="#FF546E7A">
-        <!-- Secțiunea Artist -->
-        <!-- Imaginea artistului -->
+        
         <Image x:Name="ArtistPhoto" 
                HorizontalAlignment="Left" 
                Height="152" 
@@ -17,7 +16,6 @@
                Width="166"
                Source="{Binding ArtistImageSource}" Stretch="UniformToFill"/>
 
-        <!-- Butoane pentru gestionarea artistului -->
         <Button x:Name="AddArtistButton" 
                 Content="Add" 
                 HorizontalAlignment="Left" 
@@ -54,7 +52,6 @@
                 Command="{Binding Path =UpdateArtistCommand}"
                 FontWeight="Bold"/>
 
-        <!-- Câmpuri de introducere pentru artist -->
         <TextBox x:Name="NameField" 
                  HorizontalAlignment="Left" 
                  Margin="126,49,0,0" 
@@ -99,7 +96,6 @@
                     SelectedDate="{Binding Path= CrtArtist.BirthDate, Mode =TwoWay}"
                     Height="33" FontSize="16"/>
 
-        <!-- Etichete pentru câmpurile artistului -->
         <Label Content="Name" 
                HorizontalAlignment="Left" 
                Margin="10,49,0,0" 
@@ -137,7 +133,6 @@
                FontWeight="Bold" 
                Foreground="White"/>
 
-        <!-- Câmp de căutare și tabel pentru artiști -->
 
 
         <TextBox x:Name="SearchArtistField" 
@@ -161,22 +156,18 @@
                   ItemsSource="{Binding Path= ArtistsList, Mode=TwoWay}" 
             >
             <DataGrid.Columns>
-                <!-- Coloana pentru Name -->
                 <DataGridTextColumn Header="Name" 
                                     Width="*" 
                                     Binding="{Binding Path =Name}" />
 
-                <!-- Coloana pentru Birthday -->
                 <DataGridTextColumn Header="Birthday" 
                                     Width="*" 
                                     Binding="{Binding Path=BirthDate, StringFormat=d}" />
 
-                <!-- Coloana pentru Birthplace -->
                 <DataGridTextColumn Header="Birthplace" 
                                     Width="*" 
                                     Binding="{Binding Path =BirthPlace}" />
 
-                <!-- Coloana pentru Nationality -->
                 <DataGridTextColumn Header="Nationality" 
                                     Width="*" 
                                     Binding="{Binding Path =Nationality}" />
@@ -185,8 +176,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Secțiunea Artwork -->
-        <!-- Imagini pentru opere -->
+       
         <Image x:Name="FirstImage" 
                HorizontalAlignment="Left" 
                Height="152" 
@@ -204,7 +194,6 @@
                Source="{Binding ArtworkImage2}"
                Width="166" Stretch="UniformToFill"/>
 
-        <!-- Câmpuri de introducere pentru opere -->
         <TextBox x:Name="TitleField" 
                  HorizontalAlignment="Left" 
                  Margin="718,49,0,0" 
@@ -264,7 +253,6 @@
                  FontSize="16"/>
 
 
-        <!-- Etichete pentru câmpurile opere -->
         <Label Content="Title" 
                HorizontalAlignment="Left" 
                Margin="640,46,0,0" 
@@ -311,7 +299,6 @@
                FontWeight="Bold" 
                Foreground="White"/>
 
-        <!-- Butoane pentru gestionarea opere -->
         <Button x:Name="AddArtworkButton" 
                 Content="Add" 
                 HorizontalAlignment="Left" 
@@ -363,8 +350,6 @@
                 FontWeight="Bold"/>
 
 
-        <!-- Câmpuri și filtre pentru căutarea opere -->
-
 
         <TextBox x:Name="SearchArtworkField" 
                  HorizontalAlignment="Left" 
@@ -413,7 +398,6 @@
                  FontSize="16"
                />
 
-        <!-- Tabel pentru opere -->
         <DataGrid x:Name="ArtworkDataGrid" 
                   AutoGenerateColumns="False" 
                   Margin="635,398,31,103" 
@@ -422,34 +406,28 @@
                   ItemsSource="{Binding Path =ArtworksList, Mode=TwoWay}" 
                   >
             <DataGrid.Columns>
-                <!-- Coloana pentru Title -->
                 <DataGridTextColumn Header="Title" 
                                     Width="*" 
                                     Binding="{Binding Path =Title}" />
 
-                <!-- Coloana pentru Artist -->
                 <DataGridTextColumn Header="Artist" 
                                     Width="*" 
                                     Binding="{Binding Path =Artist.Name}" />
 
-                <!-- Coloana pentru Type -->
                 <DataGridTextColumn Header="Type" 
                                     Width="*" 
                                     Binding="{Binding Path =Type}" />
 
-                <!-- Coloana pentru Price -->
                 <DataGridTextColumn Header="Price" 
                                     Width="*" 
                                     Binding="{Binding Path =Price}" />
 
-                <!-- Coloana pentru Year -->
                 <DataGridTextColumn Header="Year" 
                                     Width="*" 
                                     Binding="{Binding Path =CreationYear}" />
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Butoane pentru salvare -->
         <Button x:Name="SaveToCsvButton" 
                 Content="Save to csv" 
                 HorizontalAlignment="Left" 
